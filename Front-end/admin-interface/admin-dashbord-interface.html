@@ -270,12 +270,17 @@
   }
 
   async function api(path, options = {}) {
+    const isFormData = options.body instanceof FormData;
+    
     const headers = {
       ...getAuthHeaders(),
       ...(options.headers || {})
     };
 
-    if (!(options.body instanceof FormData) && !Object.prototype.hasOwnProperty.call(headers, 'Content-Type')) {
+    // For FormData, don't set Content-Type; browser will set it with boundary
+    if (isFormData) {
+      delete headers['Content-Type'];
+    } else if (!Object.prototype.hasOwnProperty.call(headers, 'Content-Type')) {
       headers['Content-Type'] = 'application/json';
     }
 
