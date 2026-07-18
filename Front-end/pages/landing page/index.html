@@ -676,8 +676,20 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
-            await window.ENV_CONFIG.load();
-            const BACKEND_URL = window.ENV_CONFIG.requireApiBaseUrl();
+            try {
+                await window.ENV_CONFIG.load();
+            } catch (error) {
+                console.warn('ENV config load skipped:', error.message);
+            }
+
+            let BACKEND_URL = '';
+            try {
+                BACKEND_URL = window.ENV_CONFIG.requireApiBaseUrl();
+            } catch (error) {
+                BACKEND_URL = window.location.origin || '';
+                console.warn('Using fallback backend URL:', error.message);
+            }
+
             const token = localStorage.getItem('token');
             const DEFAULT_PROFILE_PICTURE = '../../image/landing-page-pictures/no user picture.png';
             
@@ -862,45 +874,49 @@
                     }
                 });
                 
-                // Fetch username from backend
-                fetch(`${BACKEND_URL}/api/username/me`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            localStorage.removeItem('token');
-                            location.reload();
+                if (!BACKEND_URL) {
+                    console.warn('Backend URL is not configured; skipping username sync.');
+                } else {
+                    // Fetch username from backend
+                    fetch(`${BACKEND_URL}/api/username/me`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
                         }
-                        throw new Error('Failed to fetch user data');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (usernameElement && data.username) {
-                        usernameElement.textContent = data.username;
-                        currentUser.username = data.username;
-                        localStorage.setItem('userData', JSON.stringify(currentUser));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching username:', error);
-                    // Fallback to localStorage if available
-                    const userData = localStorage.getItem('userData');
-                    if (userData) {
-                        try {
-                            const user = JSON.parse(userData);
-                            if (usernameElement && user.username) {
-                                usernameElement.textContent = user.username;
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                localStorage.removeItem('token');
+                                location.reload();
                             }
+                            throw new Error('Failed to fetch user data');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (usernameElement && data.username) {
+                            usernameElement.textContent = data.username;
+                            currentUser.username = data.username;
+                            localStorage.setItem('userData', JSON.stringify(currentUser));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching username:', error);
+                        // Fallback to localStorage if available
+                        const userData = localStorage.getItem('userData');
+                        if (userData) {
+                            try {
+                                const user = JSON.parse(userData);
+                                if (usernameElement && user.username) {
+                                    usernameElement.textContent = user.username;
+                                }
 
-                            applyProfilePictureForUser(user);
-                        } catch (e) {}
-                    }
-                });
+                                applyProfilePictureForUser(user);
+                            } catch (e) {}
+                        }
+                    });
+                }
                 
             } else {
                 // USER IS NOT LOGGED IN

@@ -66,13 +66,16 @@
 
     function requireApiBaseUrl() {
         const resolved = normalizeUrl(apiUrl);
-        if (!resolved) {
-            const configError = new Error('Service unavailable. Please try again later.');
-            configError.code = 'CONFIG_URL_MISSING';
-            throw configError;
+        if (resolved) {
+            return resolved;
         }
 
-        return resolved;
+        const fallbackOrigin = normalizeUrl(typeof window !== 'undefined' && window.location ? window.location.origin : '');
+        if (fallbackOrigin) {
+            return fallbackOrigin;
+        }
+
+        return '';
     }
 
     function authHeaders() {
