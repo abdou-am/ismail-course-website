@@ -87,8 +87,13 @@
     <script src="../../Services/notifications.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
-            await window.ENV_CONFIG.load();
-            const BACKEND_URL = window.ENV_CONFIG.requireApiBaseUrl();
+            try {
+                await window.ENV_CONFIG.load();
+            } catch (error) {
+                console.warn('ENV config load skipped:', error.message);
+            }
+
+            const BACKEND_URL = window.ENV_CONFIG.requireApiBaseUrl() || 'https://smail-back-1.onrender.com';
             const form = document.getElementById('login-form');
             const googleSignin = document.querySelector('.google-signin');
 
