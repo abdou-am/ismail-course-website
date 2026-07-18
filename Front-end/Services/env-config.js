@@ -56,7 +56,8 @@
             getNonEmptyValue(env, 'URL') ||
             getNonEmptyValue(env, 'BACK_URL') ||
             getNonEmptyValue(env, 'VITE_URL') ||
-            getNonEmptyValue(env, 'NEXT_PUBLIC_URL');
+            getNonEmptyValue(env, 'NEXT_PUBLIC_URL') ||
+            'https://smail-back-1.onrender.com';
 
         const slug = String(env.COURSE_SLUG || '').trim();
         if (slug) {
@@ -75,7 +76,7 @@
             return fallbackOrigin;
         }
 
-        return '';
+        return 'https://smail-back-1.onrender.com';
     }
 
     function authHeaders() {
